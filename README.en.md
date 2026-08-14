@@ -180,6 +180,9 @@ It now patches every interlaced format at once. Patching a format the console ne
 is inert, so this is strictly safer than guessing. If you tried an earlier build and got no
 240p, it is worth trying again.
 
+The TV format selector has been **removed from the interface**: it no longer decided anything,
+and a control that looks like it chooses something without choosing is worse than no control.
+
 This does **not** make PAL work — see "Two hard requirements" above. The PAL code path
 overwrites the heights at runtime, so patching that struct is written but ineffective. It is
 included because writing it costs nothing and excluding it would mean guessing again.

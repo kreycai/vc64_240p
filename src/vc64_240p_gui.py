@@ -36,7 +36,6 @@ L = {
         'dark':      'Remover tambem o filtro escuro (deixa a imagem no brilho original)',
         'darkno':    'filtro escuro: alvo nao encontrado neste build',
         'darkdone':  'filtro escuro: ja removido',
-        'tv':        'Formato de TV do console:',
         'okhdr':     'ESTA WAD ACEITA O PATCH DE 240p',
         'badhdr':    'ESTA WAD NAO ACEITA O PATCH',
         'donehdr':   'JA ESTA EM 240p',
@@ -77,7 +76,6 @@ L = {
         'dark':      'Also remove the dark filter (restores the original brightness)',
         'darkno':    'dark filter: target not found in this build',
         'darkdone':  'dark filter: already removed',
-        'tv':        "Console's TV format:",
         'okhdr':     'THIS WAD ACCEPTS THE 240p PATCH',
         'badhdr':    'THIS WAD DOES NOT ACCEPT THE PATCH',
         'donehdr':   'ALREADY 240p',
@@ -171,14 +169,10 @@ class Gui:
                              justify='left', font=('Consolas', 9))
         self.vtxt.pack(fill='both', padx=12, pady=(0, 8))
 
-        # ---- opcoes
-        o = tk.Frame(root, bg=BG)
-        o.pack(fill='x', padx=16)
-        self.tvlbl = tk.Label(o, text='', bg=BG, fg=SUB, font=('Segoe UI', 9))
-        self.tvlbl.pack(side='left')
-        self.tv = ttk.Combobox(o, values=['NTSC', 'MPAL'], width=7, state='readonly')
-        self.tv.set('NTSC')
-        self.tv.pack(side='left', padx=8)
+        # Nao ha seletor de formato de TV: o patch grava em NTSC, PAL, MPAL e
+        # EURGB60 de uma vez. Quem escolhe qual e lido e a configuracao do
+        # console, entao pedir isso ao usuario so criava a chance de ele
+        # escolher errado e o patch nao pegar, em silencio.
 
         k = tk.Frame(root, bg=BG)
         k.pack(fill='x', padx=16, pady=(8, 0))
@@ -236,7 +230,6 @@ class Gui:
         self.pickbtn.configure(text=self.t('pick'))
         self.set_go(getattr(self, '_go_enabled', False))
         self.keylbl.configure(text=self.t('key'))
-        self.tvlbl.configure(text=self.t('tv'))
         self.loglbl.configure(text=self.t('log'))
         self.darkbox.configure(text=self.t('dark'))
         self.sub.configure(text=self.t('samefolder') + '\n' + self.t('replaces'))
@@ -319,7 +312,7 @@ class Gui:
             if not os.path.exists(key):
                 self.q.put(('verdict', (RED, self.t('unreadhdr'), self.t('nokey'), False)))
                 return
-            v = T.verdict(self.wad, key, self.tv.get())
+            v = T.verdict(self.wad, key, 'NTSC')
             self.state = v
             if not v['ok']:
                 reason = v.get('reason') or self.t('noemu')
@@ -366,7 +359,7 @@ class Gui:
             key = T.load_key(self.keyvar.get())
             w = T.Wad(self.wad, key)
             idx, emu, comp = w.find_emulator()
-            t = T.Targets(emu, self.tv.get())
+            t = T.Targets(emu, 'NTSC')
             ops = []
             dark_off = None
             if t.ok:

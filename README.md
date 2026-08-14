@@ -181,6 +181,9 @@ Agora ele patcheia todos os formatos entrelaçados de uma vez. Escrever num form
 console nunca seleciona é inerte, então isso é estritamente mais seguro que adivinhar. Se você
 tentou uma versão anterior e não teve 240p, vale tentar de novo.
 
+O seletor de formato de TV **foi removido da interface**: ele não escolhia mais nada, e um
+controle que parece decidir algo sem decidir é pior que não existir.
+
 Isso **não** faz o PAL funcionar — veja "Duas exigências do patch" acima. O caminho de código
 do PAL sobrescreve as alturas em tempo de execução, então aquela estrutura é escrita mas não
 tem efeito. Ela entra porque escrever não custa nada, e deixar de fora seria voltar a

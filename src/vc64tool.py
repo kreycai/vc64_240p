@@ -434,6 +434,12 @@ class Targets:
         self.clusters = find_srwi5_clusters(emu, self.dol)
         want = TV_BASE[tv]
         cand = [m for m in self.modes if m['tv'] == want and m['efb'] in (480, 528)]
+        # O formato pedido e so pra relatar. Se ele nao existir neste build, cai
+        # em qualquer modo entrelacado -- o patch grava em todos de qualquer jeito,
+        # entao faltar um formato especifico nao e motivo pra recusar a WAD.
+        if not cand:
+            cand = [m for m in self.modes
+                    if (m['tv'] & 3) == 0 and m['efb'] in (480, 528)]
         self.mode = cand[0] if cand else None
         main = [h for h in self.adds if h['field'] == 0x30]
         self.nop = main[0]['off'] if main else None
