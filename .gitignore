@@ -1,0 +1,17 @@
+# a chave comum do Wii NAO vai pro repositorio
+common-key.bin
+*.key
+
+# WADs e ROMs nao vao pro repositorio
+*.wad
+*.z64
+*.v64
+*.n64
+
+# build
+build/dist/
+build/build/
+dist/
+__pycache__/
+*.pyc
+*.spec
