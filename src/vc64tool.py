@@ -443,14 +443,38 @@ class Targets:
     def ok(self):
         return self.mode is not None and self.nop is not None
 
-    def patch_ops(self):
-        """-> list of (file_offset, size, value) to write into the emulator."""
-        m, ops = self.mode, []
-        ops.append((m['off'], 4, m['tv'] | 1))                 # viTVmode -> *_DS
-        ops.append((m['off'] + 0x10, 2, m['vh'] // 2))         # viHeight halved
-        for i, v in enumerate(PROG_VFILTER):                   # deflicker off
+    @property
+    def interlaced(self):
+        """Every interlaced render mode in the binary, one per TV format.
+
+        The emulator carries NTSC/PAL/MPAL/EURGB60 side by side and picks one
+        at runtime from the console's video setting -- not from the WAD. Mode
+        bits are the low 2 of viTVmode, so 0 means interlaced.
+        """
+        return [m for m in self.modes
+                if (m['tv'] & 3) == 0 and m['efb'] in (480, 528)]
+
+    def _mode_ops(self, m):
+        ops = [(m['off'], 4, m['tv'] | 1),               # viTVmode -> *_DS
+               (m['off'] + 0x10, 2, m['vh'] // 2)]       # viHeight halved
+        for i, v in enumerate(PROG_VFILTER):             # deflicker off
             ops.append((m['off'] + 0x32 + i, 1, v))
-        ops.append((self.nop, 4, 0x60000000))                  # NOP the field offset
+        return ops
+
+    def patch_ops(self, every_tv=False):
+        """-> list of (file_offset, size, value) to write into the emulator.
+
+        With every_tv, patch the interlaced struct of every TV format instead
+        of only the selected one. Patching a format the console never selects
+        is inert -- that struct is simply not read -- so doing all of them is
+        strictly safer than guessing which one is live. Guessing wrong writes
+        a correct patch into a struct nobody reads, and the tool still reports
+        success, which is the worst possible failure: silent.
+        """
+        ops = []
+        for m in (self.interlaced if every_tv else [self.mode]):
+            ops += self._mode_ops(m)
+        ops.append((self.nop, 4, 0x60000000))            # NOP the field offset
         return ops
 
 
@@ -870,7 +894,7 @@ def cmd_info(a):
     return 0 if t.ok else 4
 
 
-def do_patch_emulator(w, tv, verbose=True):
+def do_patch_emulator(w, tv, verbose=True, every_tv=True):
     """Locate + apply the 240p patch. Returns updated contents dict."""
     idx, emu, comp = w.find_emulator()
     if emu is None:
@@ -891,7 +915,13 @@ def do_patch_emulator(w, tv, verbose=True):
             print(f"                  (content{idx} was LZ77; stored decompressed, "
                   f"which is what the gz project does)")
     contents = dict(w.contents)
-    contents[idx] = apply_ops(emu, t.patch_ops())
+    every = every_tv
+    if verbose and every:
+        outros = [m['name'] for m in t.interlaced if m['off'] != t.mode['off']]
+        if outros:
+            print(f"                  tambem: {', '.join(outros)}"
+                  f"  (o console escolhe o formato, nao a WAD)")
+    contents[idx] = apply_ops(emu, t.patch_ops(every_tv=every))
     return contents
 
 
@@ -902,7 +932,7 @@ def cmd_patch(a):
     report_wad(w)
     if not w.sha_ok:
         sys.exit('error: content hashes do not match the TMD; refusing to touch this WAD')
-    contents = do_patch_emulator(w, a.tv)
+    contents = do_patch_emulator(w, a.tv, every_tv=not a.only_tv)
     tid = a.id.encode('ascii') if a.id else None
     title_id = (w.title_id[:4] + tid) if tid else None
     n = w.write(a.out, title_id=title_id, contents=contents)
@@ -1053,7 +1083,7 @@ def cmd_inject(a):
         w2 = Wad(a.base, key)             # locate on a clean copy
         if base_emu is not None:
             w2.contents[_ei2] = base_emu  # keep the 8 MB change
-        patched = do_patch_emulator(w2, a.tv)
+        patched = do_patch_emulator(w2, a.tv, every_tv=not getattr(a, 'only_tv', False))
         for k, v in patched.items():
             if v != w.contents[k]:
                 contents[k] = v
@@ -1213,7 +1243,10 @@ def main():
         p.add_argument('-k', '--key', default='common-key.bin',
                        help='Wii common key file (default: common-key.bin)')
         p.add_argument('--tv', default='NTSC', choices=list(TV_BASE),
-                       help="console TV format the patch targets (default: NTSC)")
+                       help="TV format to report on (default: NTSC); the patch "
+                            "covers every format unless --only-tv is given")
+        p.add_argument('--only-tv', action='store_true',
+                       help="patch only the --tv format, not all of them")
 
     p = sub.add_parser('info', help='analyse a VC WAD')
     p.add_argument('wad'); common(p); p.set_defaults(func=cmd_info)

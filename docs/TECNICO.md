@@ -58,7 +58,17 @@ Layout dos campos:
 `viTVmode = (formato << 2) | modo`, onde modo `0` = INT, `1` = DS (240p), `2` = PROG.
 
 Resultado típico: cinco entradas — `NTSC_INT`, `NTSC_PROG`, `MPAL_INT`, `PAL_INT`,
-`EURGB60_INT`. Só a `NTSC_INT` é patcheada.
+`EURGB60_INT`.
+
+**Todas as entradas entrelaçadas são patcheadas, não só a `NTSC_INT`.** Entrelaçada quer dizer
+que os dois bits baixos de `viTVmode` são zero. O emulador carrega todos os formatos lado a
+lado e escolhe um em tempo de execução pela configuração do console — a WAD não opina nisso.
+Patchear só um e adivinhar qual está ativo produziu a pior falha que este projeto teve: o
+patch era escrito corretamente numa estrutura que ninguém lê, e a ferramenta relatava sucesso.
+Escrever em todos é inerte nos formatos que o console nunca seleciona, então não custa nada e
+elimina o palpite.
+
+As entradas progressivas ficam de fora de propósito: em 480p não há entrelaçamento a desfazer.
 
 **O vfilter tem que continuar somando 64 depois do patch.** Um `09 09 0A 0A 0A 09 09` chapado
 soma 66 e está errado; `00 00 15 16 15 00 00` (o perfil da entrada progressiva) está certo e

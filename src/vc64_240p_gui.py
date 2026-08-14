@@ -370,9 +370,15 @@ class Gui:
             ops = []
             dark_off = None
             if t.ok:
-                self.q.put(('log', f"   render mode {t.mode['name']} @ 0x{t.mode['off']:06X}"
+                # Todos os formatos entrelacados, nao so o selecionado: quem
+                # escolhe qual struct e lida e a configuracao do console, nao a
+                # WAD. Patchear um formato que o console nao usa e inerte;
+                # patchear so o errado sai em silencio, com o programa dizendo
+                # que deu certo.
+                modos = ', '.join(m['name'] for m in t.interlaced)
+                self.q.put(('log', f"   render mode {modos} @ 0x{t.mode['off']:06X}"
                                    f"   NOP @ 0x{t.nop:06X}"))
-                ops = list(t.patch_ops())
+                ops = list(t.patch_ops(every_tv=True))
             else:
                 self.q.put(('log', '   ' + self.t('already')))
             if self.darkvar.get():

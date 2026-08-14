@@ -13,6 +13,12 @@ Você continua com tudo que o emulador oficial te dá — a compatibilidade que 
 ajustou jogo a jogo, saves nativos, suspend — e ganha a resolução que só os emuladores
 homebrew davam. Até agora era escolher um ou outro.
 
+> **Por que não tem foto de antes e depois.** Foto não mostra isso. Em qualquer exposição
+> longa o bastante pra capturar um quadro inteiro, a câmera integra os dois campos do
+> entrelaçado, então o 480i sai como imagem progressiva completa. E o defeito real do 480i é
+> o tremor, que é temporal: existe entre os campos, não dentro de um. Na CRT a diferença é
+> óbvia ao vivo e invisível num JPEG. Um vídeo curto mostraria; screenshot nunca vai.
+
 ---
 
 ## Por que isso existe
@@ -104,7 +110,8 @@ Priiloader → Homebrew Channel → desinstale o canal.
 
 ## O que ele faz
 
-Seis mudanças, 14 bytes, no binário do emulador dentro da WAD:
+Seis mudanças no binário do emulador dentro da WAD. São 14 bytes por formato de TV e, como
+ele grava os quatro formatos entrelaçados, 44 bytes no total:
 
 | # | mudança | por quê |
 |---|---|---|
@@ -142,12 +149,42 @@ Crédito do método: **NoobletCheese / Maeson**, como implementado no FriishProd
 | Majora's Mask (tradução PT-BR) | mesmo build |
 | Ocarina of Time (tradução PT-BR) | DOL cru, offsets completamente outros |
 | F-Zero X (tradução PT-BR) | revisão de SDK diferente, `text1` em `0x800070C0` |
+| Spider-Man (inject sobre base de Mario Party) | quinto build, confirmado depois da correção abaixo |
 
-Quatro builds diferentes, todos confirmados em hardware real numa CRT. O localizador achou
+Cinco builds diferentes, todos confirmados em hardware real numa CRT. O localizador achou
 todos os alvos sozinho em cada caso.
 
-Outros títulos devem funcionar mas não foram verificados — o programa avisa quando não
-encontra os alvos em vez de gravar uma WAD quebrada.
+### Isto ainda está em fase de teste
+
+Só os títulos acima foram verificados ao vivo. A biblioteca de VC de N64 mais os injects são
+uma superfície bem maior do que uma pessoa com uma CRT consegue cobrir, e os builds de
+emulador mudam de canal pra canal — que é exatamente o motivo de os alvos serem localizados
+por estrutura em vez de offset fixo.
+
+O programa se recusa a gravar em vez de gravar algo quebrado: se não achar um alvo, ele para
+e diz. Então a falha que você deve esperar é "ele avisou que não conseguiu patchear essa
+WAD", e não um canal que trava o console.
+
+**Se alguma WAD não funcionar pra você, diz qual.** Um relato que nomeia o jogo e o que
+aconteceu — se o programa recusou, ou se patcheou mas a TV continuou em 480i — vale mais que
+um relato de que deu certo. É o único jeito de isso passar de cinco títulos.
+
+### Um bug que vale conhecer, já corrigido
+
+Até há pouco o patch era escrito na estrutura de render mode de **um** formato de TV, o
+escolhido na interface. O emulador carrega NTSC, PAL, MPAL e EURGB60 lado a lado e escolhe um
+em tempo de execução pela configuração **do console**, não pela WAD. Se o seu console usasse
+um formato diferente do selecionado, o patch entrava numa estrutura que ninguém lê — e o
+programa dizia que deu certo. Falha silenciosa, a pior de todas.
+
+Agora ele patcheia todos os formatos entrelaçados de uma vez. Escrever num formato que o
+console nunca seleciona é inerte, então isso é estritamente mais seguro que adivinhar. Se você
+tentou uma versão anterior e não teve 240p, vale tentar de novo.
+
+Isso **não** faz o PAL funcionar — veja "Duas exigências do patch" acima. O caminho de código
+do PAL sobrescreve as alturas em tempo de execução, então aquela estrutura é escrita mas não
+tem efeito. Ela entra porque escrever não custa nada, e deixar de fora seria voltar a
+adivinhar.
 
 A **remoção do filtro escuro está confirmada in-game** no Majora's Mask (tradução PT-BR),
 em hardware real, e o alvo é localizado corretamente nos 8 builds testados aqui. Ela tem

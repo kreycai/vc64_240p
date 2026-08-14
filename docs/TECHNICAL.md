@@ -56,8 +56,17 @@ Field layout:
 
 `viTVmode = (format << 2) | mode`, where mode `0` = INT, `1` = DS (240p), `2` = PROG.
 
-Typical result: five entries — `NTSC_INT`, `NTSC_PROG`, `MPAL_INT`, `PAL_INT`,
-`EURGB60_INT`. Only the `NTSC_INT` one is patched.
+Typical result: seven entries — `NTSC_INT`, `NTSC_PROG`, `MPAL_INT`, `PAL_INT`, `PAL_PROG`
+(twice) and `EURGB60_INT`.
+
+**Every interlaced entry is patched, not just `NTSC_INT`.** Interlaced means the low two bits
+of `viTVmode` are zero. The emulator carries all the formats side by side and picks one at
+runtime from the console's video setting — the WAD has no say in it. Patching only one and
+guessing which is live produced the worst failure this project had: the patch was written
+correctly into a struct nothing reads, and the tool reported success. Writing all of them is
+inert for the formats the console never selects, so it costs nothing and removes the guess.
+
+Progressive entries are deliberately left alone: in 480p there is no interlacing to undo.
 
 **The vfilter must still sum to 64 after patching.** A flat `09 09 0A 0A 0A 09 09` sums to
 66 and is wrong; `00 00 15 16 15 00 00` (the profile from the progressive entry) is correct

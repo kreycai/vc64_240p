@@ -12,10 +12,12 @@ You keep everything the official emulator gives you — the per-game compatibili
 Nintendo did, native saves, suspend data — and you get the resolution the homebrew
 emulators give you. Until now you had to pick one.
 
-<!-- Coloque as fotos aqui. Duas do mesmo enquadramento (480i / 240p) valem mais que
-     qualquer paragrafo deste README. Depois de commitar as imagens:
-![480i vs 240p](docs/img/comparison.jpg)
--->
+> **Why there are no before/after photos.** A still photo cannot show this. At any exposure
+> long enough to capture a full frame, a camera integrates both interlaced fields, so 480i
+> photographs as a complete progressive image. And the actual artefact of 480i is the
+> flicker, which is temporal: it exists between fields, not within one. The difference is
+> obvious on a CRT in person and invisible in a JPEG. A short video would show it; a
+> screenshot never will.
 
 ---
 
@@ -109,7 +111,8 @@ while powering on → Priiloader → Homebrew Channel → uninstall the channel.
 
 ## How it works
 
-Six changes, 14 bytes, in the emulator binary inside the WAD:
+Six changes in the emulator binary inside the WAD. 14 bytes per TV format, and since it
+writes all four interlaced formats, 44 bytes in total:
 
 | # | change | why |
 |---|---|---|
@@ -145,12 +148,41 @@ located by structure rather than by fixed offset.
 | Majora's Mask (PT-BR inject) | same build |
 | Ocarina of Time (PT-BR inject) | raw DOL, completely different offsets |
 | F-Zero X (PT-BR inject) | different SDK revision, `text1` at `0x800070C0` |
+| Spider-Man (inject on a Mario Party base) | fifth build, confirmed after the fix below |
 
-Four different emulator builds, all confirmed on real hardware on a CRT. The locator found
+Five different emulator builds, all confirmed on real hardware on a CRT. The locator found
 every target with no manual work in each case.
 
-Other titles should work but are unverified — the tool reports when it cannot find the
-targets instead of writing a broken WAD.
+### This is still a testing phase
+
+Only the titles above have been verified in person. The N64 VC library plus injects is a much
+larger surface than one person with one CRT can cover, and emulator builds differ between
+channels — that is the whole reason the targets are located structurally instead of by
+hardcoded offsets.
+
+The tool refuses to write rather than write something broken: if it cannot find a target it
+stops and says so. So the failure mode you should expect is "it told me it could not patch
+this WAD", not a channel that bricks.
+
+**If a WAD does not work for you, please say which one.** A report that names the game and
+what happened — the tool refused, or it patched but the TV stayed at 480i — is worth more
+than a report that something worked. That is the only way this gets past five titles.
+
+### One bug worth knowing about, now fixed
+
+Until recently the patch was written into the render mode struct of a *single* TV format,
+chosen in the interface. The emulator carries NTSC, PAL, MPAL and EURGB60 side by side and
+picks one at runtime from the **console's** video setting, not from the WAD. If your console
+used a different format than the one selected, the patch landed in a struct nothing reads —
+and the tool still reported success. Silent failure, the worst kind.
+
+It now patches every interlaced format at once. Patching a format the console never selects
+is inert, so this is strictly safer than guessing. If you tried an earlier build and got no
+240p, it is worth trying again.
+
+This does **not** make PAL work — see "Two hard requirements" above. The PAL code path
+overwrites the heights at runtime, so patching that struct is written but ineffective. It is
+included because writing it costs nothing and excluding it would mean guessing again.
 
 The **dark filter removal is confirmed in-game** on Majora's Mask (PT-BR inject) on real
 hardware, and the target is located correctly in all 8 emulator builds tested here. It has
