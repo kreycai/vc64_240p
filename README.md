@@ -1,222 +1,222 @@
 # vc64_240p
 
-**English** · [Português](LEIAME.md)
+**Português** · [English](README.en.md)
 
-**Real 240p for Nintendo 64 Virtual Console on the Wii.** No deflicker blur, on the
-official Nintendo emulator.
+**240p de verdade nos canais de Virtual Console de Nintendo 64 do Wii**, sem filtro de
+borrão, rodando no emulador oficial da Nintendo.
 
-Patches an N64 VC channel so it outputs 240p instead of 480i, the way the games looked on
-a CRT from real hardware. Optionally also removes the emulator's dark filter.
+Patcheia um canal de N64 do VC pra sair em 240p em vez de 480i — do jeito que o jogo
+aparecia num N64 de verdade numa TV de tubo. Opcionalmente também remove o **filtro escuro**
+do emulador.
 
-You keep everything the official emulator gives you — the per-game compatibility work
-Nintendo did, native saves, suspend data — and you get the resolution the homebrew
-emulators give you. Until now you had to pick one.
+Você continua com tudo que o emulador oficial te dá — a compatibilidade que a Nintendo
+ajustou jogo a jogo, saves nativos, suspend — e ganha a resolução que só os emuladores
+homebrew davam. Até agora era escolher um ou outro.
 
-> **Why there are no before/after photos.** A still photo cannot show this. At any exposure
-> long enough to capture a full frame, a camera integrates both interlaced fields, so 480i
-> photographs as a complete progressive image. And the actual artefact of 480i is the
-> flicker, which is temporal: it exists between fields, not within one. The difference is
-> obvious on a CRT in person and invisible in a JPEG. A short video would show it; a
-> screenshot never will.
+> **Por que não tem foto de antes e depois.** Foto não mostra isso. Em qualquer exposição
+> longa o bastante pra capturar um quadro inteiro, a câmera integra os dois campos do
+> entrelaçado, então o 480i sai como imagem progressiva completa. E o defeito real do 480i é
+> o tremor, que é temporal: existe entre os campos, não dentro de um. Na CRT a diferença é
+> óbvia ao vivo e invisível num JPEG. Um vídeo curto mostraria; screenshot nunca vai.
 
 ---
 
-## Why this exists
+## Por que isso existe
 
-N64 Virtual Console on the Wii is locked to 480i. It is not a settings problem: the emulator
-renders internally at 480 lines, so there is no 240p signal to force. NES, SNES and Genesis
-VC titles all output 240p when the console is set to 480i — N64 is the exception.
+O VC de N64 do Wii é travado em 480i, e não é questão de configuração: o emulador desenha
+480 linhas internamente, então não existe sinal de 240p pra forçar. NES, SNES e Mega Drive
+do VC saem em 240p quando o console está em 480i — o N64 é a exceção.
 
-Every other route is closed:
+Todos os outros caminhos estão fechados:
 
-| route | why it fails |
+| caminho | por que não serve |
 |---|---|
-| vWii (Wii U) | cannot output 240p at all — hardware limitation |
-| Not64 / Wii64 | do 240p, but heavy games struggle and several have documented softlocks |
-| Swiss / Nintendont | only force 480p/576p; force-240p was requested and never implemented |
-| render 480 and downscale | the GX display copy **cannot downscale vertically**, only upscale |
+| vWii (Wii U) | não faz 240p de jeito nenhum — limitação de hardware |
+| Not64 / Wii64 | fazem 240p, mas jogos pesados sofrem e vários têm travamento documentado |
+| Swiss / Nintendont | só forçam 480p/576p; 240p forçado foi pedido e nunca implementado |
+| desenhar 480 e reduzir | o display copy do GX **não faz downscale vertical**, só upscale |
 
-So this patches the emulator binary instead.
+Por isso este programa patcheia o binário do emulador.
 
-## What it is not
+## O que ele NÃO é
 
-**The GUI is not a ROM injector.** It patches N64 VC WADs that already exist — retail
-channels, or injects somebody else built.
+**A interface não é injetor de ROM.** Ela patcheia WADs de VC de N64 que já existem —
+canais de varejo, ou injects feitos por outra pessoa.
 
-To build a channel from a ROM, use [FriishProduce](https://github.com/CatmanFan/FriishProduce):
-it picks the right base for the emulator revision, handles `romc` compression and the ROM
-size allocation. Then run its output through this for 240p.
+Pra criar um canal a partir de uma ROM, use o
+[FriishProduce](https://github.com/CatmanFan/FriishProduce): ele escolhe a base certa pra
+revisão do emulador, comprime `romc` e ajusta a alocação de tamanho da ROM. Depois é só
+passar a saída dele por aqui pro 240p.
 
-The two fit together — no injector does 240p, and the GUI does not inject.
+Os dois se encaixam — nenhum injetor faz 240p, e a interface não injeta.
 
-> The CLI (`src/vc64tool.py`) does carry an **experimental** `inject` command, `romc`
-> support included. It is here because the findings around it are written up in
-> [docs/TECHNICAL.md](docs/TECHNICAL.md), not because it beats FriishProduce — it doesn't.
-> Per-game compatibility is the wall, not the injector: most ROMs fail on any given base no
-> matter which tool built the channel. Writing `romc` also needs Jurai's `romc.exe` beside
-> the script or in `./tools`; that binary is third-party and is not redistributed here.
+> A linha de comando (`src/vc64tool.py`) tem sim um comando `inject` **experimental**, com
+> suporte a `romc`. Ele está aqui porque o que descobrimos em volta dele está documentado no
+> [docs/TECNICO.md](docs/TECNICO.md), não porque seja melhor que o FriishProduce — não é. A
+> parede é a compatibilidade jogo por jogo, não o injetor: a maioria das ROMs falha em
+> qualquer base, independente da ferramenta que montou o canal. Gravar `romc` também exige o
+> `romc.exe` do Jurai ao lado do script ou em `./tools`; esse binário é de terceiros e não é
+> redistribuído aqui.
 
 ---
 
-## Usage
+## Como usar
 
-1. Run `vc64_240p.exe`
-2. **Choose a WAD**
-3. The panel reports both patches independently, so you know what will happen:
+1. Abra o `vc64_240p.exe`
+2. **Escolher WAD...** e aponte pro canal de N64
+3. O painel diz o estado dos dois patches, separadamente:
    ```
-   240p        : CAN BE APPLIED
-   dark filter : CAN BE APPLIED
+   240p          : APLICAVEL
+   filtro escuro : APLICAVEL
    ```
-4. Tick the dark filter box if you want it, then convert
-5. The result is written **to the same folder as the original**, named after what was
-   actually applied. The original file is not modified.
+4. Marque a caixa do filtro escuro se quiser, e converta
+5. O resultado é gravado **na mesma pasta da original**, com o nome descrevendo o que foi
+   aplicado de fato. O arquivo original não é alterado.
 
-The output keeps the same channel id, so installing it **replaces the original channel and
-keeps your saves**. You can run an already-converted WAD through again to add only the
-dark filter.
+A saída mantém o mesmo ID de canal, então ao instalar ela **substitui o canal original e
+preserva os saves**. Dá pra passar uma WAD já convertida de novo, só pra adicionar o filtro.
 
-### Requirements
+### O que você precisa
 
-- A Wii **common key** (`common-key.bin`, 16 bytes). **Not included.** Generate it once
-  with [gzinject](https://github.com/PracticeROM/gzinject):
+- A **chave comum** do Wii (`common-key.bin`, 16 bytes). **Não vem junto.** Gere uma vez
+  com o [gzinject](https://github.com/PracticeROM/gzinject):
   ```
   gzinject -a genkey
   ```
-  > `genkey` asks you to **type `45e` and press enter**. If you pipe empty input it prints
-  > "successfully generated" and produces a **wrong key** — those three characters are the
-  > decryption IV. This is not documented anywhere and costs an evening to work out.
-- A Wii with **cIOS 249** and **Priiloader** (or BootMii).
+  > Atenção: o `genkey` pede pra você **digitar `45e` e dar enter**. Se você não digitar,
+  > ele imprime "successfully generated" e gera uma chave **ERRADA** — esses três
+  > caracteres são o IV de decriptação. Isso não está documentado em lugar nenhum.
+- Um Wii com **cIOS 249** e **Priiloader** (ou BootMii).
 
-Running from source instead of the exe: Python 3.8+ and `cryptography`.
+### Instalando o resultado
 
-### Installing the result
+WAD em `SD:/wad/`, instalar com o **YAWM ModMii Edition** — o Wii Mod Lite não tem seletor
+de IOS. Escolha **IOS249**. Erro `-1017` quer dizer que aquele IOS não tem trucha; tente
+outro slot de cIOS.
 
-Put the WAD in `SD:/wad/` and install with **YAWM ModMii Edition** — Wii Mod Lite has no
-IOS selector. Choose **IOS249**. Error `-1017` means that IOS has no trucha patch; try
-another cIOS slot.
+**Tenha o Priiloader instalado.** O jeito realista de um canal ruim dar problema é *banner
+brick* — o Menu do Wii travar ao desenhar o banner. Recuperação: segure RESET ao ligar →
+Priiloader → Homebrew Channel → desinstale o canal.
 
-**Have Priiloader installed.** The realistic failure mode for a bad channel WAD is a
-*banner brick* — the System Menu hanging while drawing the banner. Recovery: hold RESET
-while powering on → Priiloader → Homebrew Channel → uninstall the channel.
+### Duas exigências do patch
 
-### Two hard requirements of the patch itself
-
-- **Set the console to 480i.** In 480p the emulator selects the `NTSC_PROG` render mode
-  entry, which is not patched. By design — you would not want a 240p patch fighting a
-  progressive display mode.
-- **PAL is not supported.** The PAL code path overwrites the heights at runtime with 574,
-  so patching that table entry alone does nothing. It would also target 288p, not 240p.
+- **Deixe o console em 480i.** Em 480p o emulador escolhe a entrada `NTSC_PROG` da tabela
+  de modos, que não é patcheada. É de propósito — você não ia querer um patch de 240p
+  brigando com um modo progressivo.
+- **PAL não é suportado.** O caminho PAL sobrescreve as alturas em tempo de execução com
+  574, então patchear aquela entrada da tabela não faz nada. E o alvo lá seria 288p, não 240p.
 
 ---
 
-## How it works
+## O que ele faz
 
-Six changes in the emulator binary inside the WAD. 14 bytes per TV format, and since it
-writes all four interlaced formats, 44 bytes in total:
+Seis mudanças no binário do emulador dentro da WAD. São 14 bytes por formato de TV e, como
+ele grava os quatro formatos entrelaçados, 44 bytes no total:
 
-| # | change | why |
+| # | mudança | por quê |
 |---|---|---|
-| 1 | `viTVmode` `NTSC_INT` → `NTSC_DS` | double-strike output, i.e. 240p |
-| 2 | `viHeight` 480 → 240 | the VI window |
-| 3 | `efbHeight` / `xfbHeight` **left alone** | the emulator keeps drawing 480 lines, so nothing is cropped or zoomed |
-| 4 | `xFBmode` **left as DF** | the double-field stride produces the 2:1 decimation, and therefore the correct geometry |
-| 5 | `vfilter` → progressive profile | deflicker **off**, sharpness preserved |
-| 6 | **NOP** the `add` that offsets the second VI field base by one line | without it you get 240p with severe flicker: the VI alternates between the even and odd line sets every frame |
+| 1 | `viTVmode` `NTSC_INT` → `NTSC_DS` | double-strike, ou seja 240p |
+| 2 | `viHeight` 480 → 240 | a janela do VI |
+| 3 | `efbHeight` / `xfbHeight` **intocados** | o emulador continua desenhando 480 linhas, então nada é cortado nem ampliado |
+| 4 | `xFBmode` **mantido em DF** | o stride de 2 linhas é o que faz a decimação 2:1, e portanto a geometria certa |
+| 5 | `vfilter` → perfil progressivo | deflicker **desligado**, nitidez preservada |
+| 6 | **NOP** no `add` que desloca a segunda base de campo do VI em uma linha | sem isso dá 240p com tremor forte: o VI alterna entre as linhas pares e ímpares a cada quadro |
 
-Item 6 took the longest to find and is why a naive attempt at this looks broken.
+O item 6 foi o mais difícil de achar, e é por causa dele que uma tentativa ingênua disso
+parece não funcionar.
 
-**Nothing is hardcoded to a game.** Every target is located by structural pattern matching,
-so it works on emulator builds it has never seen. See **[docs/TECHNICAL.md](docs/TECHNICAL.md)**
-for how each one is found, the offsets, and the ten hypotheses that were wrong first.
+**Nada é fixo por jogo.** Todos os alvos são achados por padrão estrutural, então funciona
+em builds de emulador que o programa nunca viu. Os detalhes técnicos, os offsets e as dez
+hipóteses que estavam erradas antes estão em **[docs/TECNICO.md](docs/TECNICO.md)**
+(a mesma coisa em inglês: [docs/TECHNICAL.md](docs/TECHNICAL.md)).
 
-### Dark filter removal (optional, 4 bytes)
+### Remoção do filtro escuro (opcional, 4 bytes)
 
-The emulator darkens the picture compared to real hardware. The patch writes a `blr` over
-the prologue of the function responsible, so it returns immediately. Global — everything
-gets brighter, it is not a selective adjustment.
+O emulador escurece a imagem em relação ao hardware real. O patch escreve um `blr` por cima
+do prólogo da função responsável, fazendo ela retornar na hora. É global — clareia tudo,
+não é um ajuste seletivo.
 
-Method credit: **NoobletCheese / Maeson**, as implemented in FriishProduce. Here it is
-located by structure rather than by fixed offset.
+Crédito do método: **NoobletCheese / Maeson**, como implementado no FriishProduce. Aqui ele
+é localizado por padrão estrutural em vez de offset fixo.
 
 ---
 
-## Confirmed working
+## Confirmado funcionando
 
-| game | emulator build |
+| jogo | build do emulador |
 |---|---|
-| Majora's Mask (USA, retail VC) | LZ77 `content1` |
-| Majora's Mask (PT-BR inject) | same build |
-| Ocarina of Time (PT-BR inject) | raw DOL, completely different offsets |
-| F-Zero X (PT-BR inject) | different SDK revision, `text1` at `0x800070C0` |
-| Spider-Man (inject on a Mario Party base) | fifth build, confirmed after the fix below |
+| Majora's Mask (USA, VC de varejo) | `content1` em LZ77 |
+| Majora's Mask (tradução PT-BR) | mesmo build |
+| Ocarina of Time (tradução PT-BR) | DOL cru, offsets completamente outros |
+| F-Zero X (tradução PT-BR) | revisão de SDK diferente, `text1` em `0x800070C0` |
+| Spider-Man (inject sobre base de Mario Party) | quinto build, confirmado depois da correção abaixo |
 
-Five different emulator builds, all confirmed on real hardware on a CRT. The locator found
-every target with no manual work in each case.
+Cinco builds diferentes, todos confirmados em hardware real numa CRT. O localizador achou
+todos os alvos sozinho em cada caso.
 
-### This is still a testing phase
+### Isto ainda está em fase de teste
 
-Only the titles above have been verified in person. The N64 VC library plus injects is a much
-larger surface than one person with one CRT can cover, and emulator builds differ between
-channels — that is the whole reason the targets are located structurally instead of by
-hardcoded offsets.
+Só os títulos acima foram verificados ao vivo. A biblioteca de VC de N64 mais os injects são
+uma superfície bem maior do que uma pessoa com uma CRT consegue cobrir, e os builds de
+emulador mudam de canal pra canal — que é exatamente o motivo de os alvos serem localizados
+por estrutura em vez de offset fixo.
 
-The tool refuses to write rather than write something broken: if it cannot find a target it
-stops and says so. So the failure mode you should expect is "it told me it could not patch
-this WAD", not a channel that bricks.
+O programa se recusa a gravar em vez de gravar algo quebrado: se não achar um alvo, ele para
+e diz. Então a falha que você deve esperar é "ele avisou que não conseguiu patchear essa
+WAD", e não um canal que trava o console.
 
-**If a WAD does not work for you, please say which one.** A report that names the game and
-what happened — the tool refused, or it patched but the TV stayed at 480i — is worth more
-than a report that something worked. That is the only way this gets past five titles.
+**Se alguma WAD não funcionar pra você, diz qual.** Um relato que nomeia o jogo e o que
+aconteceu — se o programa recusou, ou se patcheou mas a TV continuou em 480i — vale mais que
+um relato de que deu certo. É o único jeito de isso passar de cinco títulos.
 
-### One bug worth knowing about, now fixed
+### Um bug que vale conhecer, já corrigido
 
-Until recently the patch was written into the render mode struct of a *single* TV format,
-chosen in the interface. The emulator carries NTSC, PAL, MPAL and EURGB60 side by side and
-picks one at runtime from the **console's** video setting, not from the WAD. If your console
-used a different format than the one selected, the patch landed in a struct nothing reads —
-and the tool still reported success. Silent failure, the worst kind.
+Até há pouco o patch era escrito na estrutura de render mode de **um** formato de TV, o
+escolhido na interface. O emulador carrega NTSC, PAL, MPAL e EURGB60 lado a lado e escolhe um
+em tempo de execução pela configuração **do console**, não pela WAD. Se o seu console usasse
+um formato diferente do selecionado, o patch entrava numa estrutura que ninguém lê — e o
+programa dizia que deu certo. Falha silenciosa, a pior de todas.
 
-It now patches every interlaced format at once. Patching a format the console never selects
-is inert, so this is strictly safer than guessing. If you tried an earlier build and got no
-240p, it is worth trying again.
+Agora ele patcheia todos os formatos entrelaçados de uma vez. Escrever num formato que o
+console nunca seleciona é inerte, então isso é estritamente mais seguro que adivinhar. Se você
+tentou uma versão anterior e não teve 240p, vale tentar de novo.
 
-This does **not** make PAL work — see "Two hard requirements" above. The PAL code path
-overwrites the heights at runtime, so patching that struct is written but ineffective. It is
-included because writing it costs nothing and excluding it would mean guessing again.
+Isso **não** faz o PAL funcionar — veja "Duas exigências do patch" acima. O caminho de código
+do PAL sobrescreve as alturas em tempo de execução, então aquela estrutura é escrita mas não
+tem efeito. Ela entra porque escrever não custa nada, e deixar de fora seria voltar a
+adivinhar.
 
-The **dark filter removal is confirmed in-game** on Majora's Mask (PT-BR inject) on real
-hardware, and the target is located correctly in all 8 emulator builds tested here. It has
-fewer in-game hours behind it than the 240p patch, which has four confirmed titles.
-
-**Reports of builds where the locator fails are more useful than reports of ones that work.**
+A **remoção do filtro escuro está confirmada in-game** no Majora's Mask (tradução PT-BR),
+em hardware real, e o alvo é localizado corretamente nos 8 builds testados aqui. Ela tem
+menos horas de jogo atrás dela que o patch de 240p, que tem quatro títulos confirmados.
 
 ---
 
-## Building
+## Compilando
 
-Windows, with Python 3.8+ and `pip install cryptography pyinstaller`:
+No Windows, com Python 3.8+ e `pip install cryptography pyinstaller`:
 
 ```
 build\build.bat
 ```
 
-Produces `dist\vc64_240p.exe`, standalone. The GUI uses tkinter, which ships with the
-standard Windows Python installer.
+Gera `dist\vc64_240p.exe`, standalone. A interface usa tkinter, que já vem no instalador
+padrão do Python pra Windows.
 
 ---
 
-## Credits
+## Créditos
 
-- **BirdonWheels** — demonstrated on r/crtgaming in 2026 that 240p on VC N64 was possible,
-  patching several emulators with radare2. Those patches were never released and never
-  covered Ocarina of Time or Majora's Mask. This is an independent implementation with an
-  automatic locator.
-- **NoobletCheese / Maeson** — the dark filter method.
-- **[FriishProduce](https://github.com/CatmanFan/FriishProduce)** (CatmanFan) — injection,
-  and where the dark filter method is implemented.
-- **[gzinject](https://github.com/PracticeROM/gzinject)** (KrimtonZ) — WAD handling
-  reference and the common key generator.
+- **BirdonWheels** — mostrou no r/crtgaming em 2026 que 240p no VC de N64 era possível,
+  patcheando vários emuladores com radare2. Aqueles patches nunca foram publicados e nunca
+  cobriram Ocarina of Time nem Majora's Mask. Esta é uma implementação independente, com
+  localizador automático.
+- **NoobletCheese / Maeson** — o método do filtro escuro.
+- **[FriishProduce](https://github.com/CatmanFan/FriishProduce)** (CatmanFan) — injeção, e
+  onde o método do filtro escuro está implementado.
+- **[gzinject](https://github.com/PracticeROM/gzinject)** (KrimtonZ) — referência de
+  manipulação de WAD e gerador da chave comum.
 
-## License
+## Licença
 
-MIT — see [LICENSE](LICENSE).
+MIT — veja o [LICENSE](LICENSE).

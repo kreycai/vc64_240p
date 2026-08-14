@@ -11,6 +11,7 @@ common-key.bin
 # build
 build/dist/
 build/build/
+build/_work/
 dist/
 __pycache__/
 *.pyc
