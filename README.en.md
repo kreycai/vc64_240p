@@ -34,7 +34,7 @@ Every other route is closed:
 | vWii (Wii U) | cannot output 240p at all — hardware limitation |
 | Not64 / Wii64 | do 240p, but heavy games struggle and several have documented softlocks |
 | Swiss / Nintendont | only force 480p/576p; force-240p was requested and never implemented |
-| render 480 and downscale | the GX display copy **cannot downscale vertically**, only upscale |
+| render 480 and downscale | possible, but it means rewriting the emulator's copy path — see the note below |
 
 So this patches the emulator binary instead.
 
@@ -119,11 +119,31 @@ writes all four interlaced formats, 44 bytes in total:
 | 1 | `viTVmode` `NTSC_INT` → `NTSC_DS` | double-strike output, i.e. 240p |
 | 2 | `viHeight` 480 → 240 | the VI window |
 | 3 | `efbHeight` / `xfbHeight` **left alone** | the emulator keeps drawing 480 lines, so nothing is cropped or zoomed |
-| 4 | `xFBmode` **left as DF** | the double-field stride produces the 2:1 decimation, and therefore the correct geometry |
+| 4 | `xFBmode` **left as DF** | the double-field stride produces the 2:1 decimation, and therefore the correct geometry. This is line dropping, not filtering — see below |
 | 5 | `vfilter` → progressive profile | deflicker **off**, sharpness preserved |
 | 6 | **NOP** the `add` that offsets the second VI field base by one line | without it you get 240p with severe flicker: the VI alternates between the even and odd line sets every frame |
 
 Item 6 took the longest to find and is why a naive attempt at this looks broken.
+
+### Decimation by dropping lines, not by filtering
+
+A correction I owe to a reader on GBAtemp, worth recording here.
+
+This README used to claim the GX display copy **cannot** reduce vertically. As a blanket
+statement that is wrong: what will not go below 1.0 is `GXSetDispCopyYScale`. The **interlaced
+copy modes** do copy alternate lines and do achieve a 2:1 reduction — that is how Swiss does it.
+
+The difference between the two routes matters:
+
+| | how it reduces | result |
+|---|---|---|
+| Swiss | vertical filter, linear 2:1 downsample | lines are averages of their neighbours: softer, no aliasing |
+| here | DF stride, the VI reads every other line | plain dropping: sharper, with the aliasing that comes with it |
+
+I prefer the second on a CRT, but that is a preference, not a technical argument. What does
+justify the choice here is different: Swiss controls its own GX setup, while this patches a
+closed binary. Changing the copy path means finding and rewriting the emulator's own copy
+configuration; changing the VI side is 14 bytes, locatable structurally on any build.
 
 **Nothing is hardcoded to a game.** Every target is located by structural pattern matching,
 so it works on emulator builds it has never seen. See **[docs/TECHNICAL.md](docs/TECHNICAL.md)**

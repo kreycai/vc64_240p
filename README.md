@@ -34,7 +34,7 @@ Todos os outros caminhos estão fechados:
 | vWii (Wii U) | não faz 240p de jeito nenhum — limitação de hardware |
 | Not64 / Wii64 | fazem 240p, mas jogos pesados sofrem e vários têm travamento documentado |
 | Swiss / Nintendont | só forçam 480p/576p; 240p forçado foi pedido e nunca implementado |
-| desenhar 480 e reduzir | o display copy do GX **não faz downscale vertical**, só upscale |
+| desenhar 480 e reduzir | dá pra fazer, mas exige reescrever o caminho de cópia do emulador — veja a nota abaixo |
 
 Por isso este programa patcheia o binário do emulador.
 
@@ -118,12 +118,33 @@ ele grava os quatro formatos entrelaçados, 44 bytes no total:
 | 1 | `viTVmode` `NTSC_INT` → `NTSC_DS` | double-strike, ou seja 240p |
 | 2 | `viHeight` 480 → 240 | a janela do VI |
 | 3 | `efbHeight` / `xfbHeight` **intocados** | o emulador continua desenhando 480 linhas, então nada é cortado nem ampliado |
-| 4 | `xFBmode` **mantido em DF** | o stride de 2 linhas é o que faz a decimação 2:1, e portanto a geometria certa |
+| 4 | `xFBmode` **mantido em DF** | o stride de 2 linhas é o que faz a decimação 2:1, e portanto a geometria certa. É descarte de linha, não filtragem — veja abaixo |
 | 5 | `vfilter` → perfil progressivo | deflicker **desligado**, nitidez preservada |
 | 6 | **NOP** no `add` que desloca a segunda base de campo do VI em uma linha | sem isso dá 240p com tremor forte: o VI alterna entre as linhas pares e ímpares a cada quadro |
 
 O item 6 foi o mais difícil de achar, e é por causa dele que uma tentativa ingênua disso
 parece não funcionar.
+
+### Decimação por descarte, não por filtro
+
+Uma correção que eu devo a um leitor no GBAtemp, e que vale registrar.
+
+Eu afirmava aqui que o display copy do GX **não** faz redução vertical. Isso está errado como
+afirmação geral: o que não aceita valor abaixo de 1.0 é o `GXSetDispCopyYScale`. Os **modos de
+cópia entrelaçada** copiam linhas alternadas e produzem sim uma redução 2:1 — é assim que o
+Swiss faz.
+
+A diferença entre os dois caminhos importa:
+
+| | como reduz | resultado |
+|---|---|---|
+| Swiss | filtro vertical, subamostragem linear 2:1 | linhas são a média das vizinhas: mais suave, sem aliasing |
+| aqui | stride DF, o VI lê linha sim linha não | descarte puro: mais nítido, com o aliasing que vem junto |
+
+Prefiro o segundo numa CRT, mas isso é preferência, não argumento técnico. O que justifica a
+escolha aqui é outra coisa: o Swiss controla o próprio setup de GX, enquanto isto patcheia um
+binário fechado. Mudar o caminho de cópia significa achar e reescrever a configuração de cópia
+do emulador; mudar o lado do VI são 14 bytes, localizáveis por estrutura em qualquer build.
 
 **Nada é fixo por jogo.** Todos os alvos são achados por padrão estrutural, então funciona
 em builds de emulador que o programa nunca viu. Os detalhes técnicos, os offsets e as dez
